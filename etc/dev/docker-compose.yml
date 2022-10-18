@@ -1,0 +1,42 @@
+version: '3.7'
+
+services:
+    nginx:
+        image: nginx:1.17-alpine
+        volumes:
+            - ./dev/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+    database:
+        ports:
+            - "5432:5432"
+
+    database_test:
+        image: postgres:14.2
+        container_name: ${COMPOSE_PROJECT_NAME}_database_test
+        restart: always
+        environment:
+            POSTGRES_USER: ${APP_POSTGRES_USER}
+            POSTGRES_PASSWORD: ${APP_POSTGRES_PASSWORD}
+            POSTGRES_DB: ${APP_POSTGRES_DB}
+        networks:
+            - net
+        volumes:
+            - app_postgres_test:/var/lib/postgresql/data
+        ports:
+            - "5433:5432"
+
+    mailhog:
+        image: mailhog/mailhog:latest
+        environment:
+          - MH_STORAGE=maildir
+        ports:
+          - "8025:8025"
+        networks:
+            - net
+
+    redis:
+        ports:
+          - "${REDIS_PORT:-6379}:6379"
+volumes:
+    app_postgres_test:
+        name: ${COMPOSE_PROJECT_NAME}_postgres_test
